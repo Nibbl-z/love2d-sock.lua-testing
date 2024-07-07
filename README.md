@@ -1,2 +1,2 @@
 # love2d sock.lua testing
- i love sock.lua
+using sock.lua to make a basic multiplayer game
