@@ -1,7 +1,8 @@
 sock = require("sock")
 
-local world = {}
+local world = nil
 local environment = nil
+local index = 0
 
 function love.load()
     client = sock.newClient("localhost", 22122)
@@ -14,13 +15,20 @@ function love.load()
         print("Client disconnected from the server.")
     end)
     
+    client:on("getPlayers", function (data)
+        world = data
+    end)
+    
     client:on("updatePlayers", function(msg)
-        world = msg
+        print(msg[1], msg[2])
+        if tonumber(msg[1]) ~= index and world ~= nil then
+            print("moving "..msg[1].. "!!")
+            world[msg[1]] = msg[2]
+        end
     end)
 
-    client:on("environment", function (data)
-        print(data)
-        environment = data
+    client:on("getIndex", function (data)
+        index = data
     end)
     
     client:connect()
@@ -28,27 +36,44 @@ function love.load()
 end
 
 local movementDirections = {
-	w = {0,-0.01}, a = {-1,0}, s = {0,1}, d = {1,0}
+	a = -1, d = 1
 }
 
 function love.update(dt)
-    for k, v in pairs(movementDirections) do
-		if love.keyboard.isDown(k) then
-			client:send("move", v)
-		end
-	end
-    if environment == nil then
-        client:send("getEnvironment")
+    
+    if world == nil then
+        client:send("getPlayers")
+    else
+        local plr = world[tostring(index)]
+
+        for k, v in pairs(movementDirections) do
+            if love.keyboard.isDown(k) then
+                
+                if plr ~= nil then
+                    plr.x = plr.x + v * 10
+                    client:send("move", plr.x)
+                end
+            end
+        end
     end
+    
+    if index == 0 then
+        client:send("getIndex")
+    end
+    
+    
     client:update()
     
     
 end
 
 function love.draw()
-	for k, player in pairs(world) do
-		love.graphics.rectangle("fill", player.x, player.y, 50, 50)
-	end
+    if world ~= nil then
+        for k, player in pairs(world) do
+            love.graphics.rectangle("fill", player.x, player.y, 50, 50)
+        end
+    end
+	
     
     if environment ~= nil then
         for _, v in ipairs(environment) do
