@@ -1,6 +1,7 @@
-sock = require "sock"
+sock = require("sock")
 
 local world = {}
+local environment = nil
 
 function love.load()
     client = sock.newClient("localhost", 22122)
@@ -8,7 +9,7 @@ function love.load()
     client:on("connect", function(data)
         print("Client connected to the server.")
     end)
-
+    
     client:on("disconnect", function(data)
         print("Client disconnected from the server.")
     end)
@@ -17,15 +18,17 @@ function love.load()
         world = msg
     end)
 
+    client:on("environment", function (data)
+        print(data)
+        environment = data
+    end)
+    
     client:connect()
-end
-
-function love.keypressed()
-	client:send("greeting", "Hello, my name is Inigo Montoya.")
+    
 end
 
 local movementDirections = {
-	w = {0,-1}, a = {-1,0}, s = {0,1}, d = {1,0}
+	w = {0,-0.01}, a = {-1,0}, s = {0,1}, d = {1,0}
 }
 
 function love.update(dt)
@@ -34,12 +37,23 @@ function love.update(dt)
 			client:send("move", v)
 		end
 	end
-
+    if environment == nil then
+        client:send("getEnvironment")
+    end
     client:update()
+    
+    
 end
 
 function love.draw()
 	for k, player in pairs(world) do
-		love.graphics.rectangle("fill", player.x, player.y, 20, 20)
+		love.graphics.rectangle("fill", player.x, player.y, 50, 50)
 	end
+    
+    if environment ~= nil then
+        for _, v in ipairs(environment) do
+            love.graphics.rectangle("fill", v.pX, v.pY, v.sX, v.sY)
+        end
+    end
+    
 end
