@@ -19,6 +19,7 @@ function love.load()
     client:on("getGame", function (data)
         world = data[1]
         bullets = data[2]
+        enemies = data[3]
     end)
 
     client:on("updatePlayers", function(msg)
@@ -30,6 +31,10 @@ function love.load()
     
     client:on("updateBullets", function (data)
         bullets = data
+    end)
+
+    client:on("updateEnemies", function (data)
+        enemies = data
     end)
 
     client:on("getIndex", function (data)
@@ -59,7 +64,7 @@ function love.update(dt)
 
         for k, v in pairs(movementDirections) do
             if love.keyboard.isDown(k) then
-
+                
                 if plr ~= nil then
                     plr.x = plr.x + v * 10
                     client:send("move", plr.x)
@@ -86,6 +91,12 @@ function love.draw()
     if bullets ~= nil then
         for _, v in ipairs(bullets) do
             love.graphics.rectangle("fill", v.x, v.y, 5, 20)
+        end
+    end
+
+    if enemies ~= nil then
+        for _, v in ipairs(enemies) do
+            love.graphics.rectangle("line", v.x, v.y, 40, 40)
         end
     end
 

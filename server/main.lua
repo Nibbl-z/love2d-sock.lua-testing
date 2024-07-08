@@ -6,6 +6,9 @@ local players = {}
 local bullets = {}
 local bulletsInstances = {}
 local enemies = {}
+local enemiesInstances = {}
+
+local enemySpawnTimer = love.timer.getTime() + 5
 
 function love.load()
     server = sock.newServer("*", 22122)
@@ -20,7 +23,7 @@ function love.load()
     server:on("getIndex", function (data, client)
         client:send("getIndex", client:getIndex())
     end)
-
+    
     server:on("disconnect", function (data, client)
         print("Player"..tostring(client:getIndex()).." has disconnected")
         
@@ -35,24 +38,37 @@ function love.load()
     end)
     
     server:on("getGame", function (data, client)
-        client:send("getGame", {players, bullets})
+        client:send("getGame", {players, bullets, enemies})
     end)
 
     server:on("shoot", function (data, client)
         local bullet = instance:New(nil, "Bullet"..tostring(#bullets))
         local plr = playersInstances[tostring(client:getIndex())]
 
-        bullet.Position.X = plr.Position.X
+        bullet.Position.X = plr.Position.X + 22.5
         bullet.Position.Y = plr.Position.Y
 
         table.insert(bulletsInstances, bullet)
         table.insert(bullets, {
-            x = bullet.Position.X + 25,
+            x = bullet.Position.X + 22.5,
             y = bullet.Position.Y
         })
     end)
     
     print("server is up and running")
+end
+
+function SpawnEnemy()
+    local enemy = instance:New(nil, "Enemy"..tostring(#enemies))
+    enemy.Position.X = love.math.random(200, 600)
+    enemy.Position.Y = 50
+    enemy.Direction = 1
+    
+    table.insert(enemiesInstances, enemy)
+    table.insert(enemies, {
+        x = enemy.Position.X,
+        y = enemy.Position.Y
+    })
 end
 
 function love.update(dt)
@@ -82,6 +98,31 @@ function love.update(dt)
             table.remove(bullets, i)
         end
     end
+
+    if love.timer.getTime() > enemySpawnTimer then
+        enemySpawnTimer = love.timer.getTime() + 5
+        
+        SpawnEnemy()
+    end
+    
+    for i, enemy in ipairs(enemiesInstances) do
+        if enemy.Position.X > 800 then
+            enemy.Direction = -1
+            enemy.Position.Y = enemy.Position.Y + 20
+        elseif enemy.Position.X < 0 then
+            enemy.Direction = 1
+            enemy.Position.Y = enemy.Position.Y + 20
+        end
+
+        enemy.Position.X = enemy.Position.X + enemy.Direction * 10
+
+        enemies[i] = {
+            x = enemy.Position.X,
+            y = enemy.Position.Y
+        }
+    end
+
+    server:sendToAll("updateEnemies", enemies)
     
     server:update()
 end
