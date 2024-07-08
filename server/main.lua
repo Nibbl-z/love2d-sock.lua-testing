@@ -11,10 +11,13 @@ local enemiesInstances = {}
 
 local enemySpawnTimer = love.timer.getTime()
 local enemySpawnTime = 4
-local enemySpeed = 5
+local enemySpeed = 6
 
 local health = 100
 local scores = {}
+
+local restartTimer = 0
+local restarting = false
 
 function love.load()
     server = sock.newServer("*", 22122)
@@ -127,7 +130,7 @@ function love.update(dt)
         enemySpawnTimer = love.timer.getTime() + enemySpawnTime
         
         enemySpawnTime = utils:Clamp(enemySpawnTime - 0.2, 1, 100)
-        enemySpeed = utils:Clamp(enemySpeed + 0.1, 0, 15)
+        enemySpeed = utils:Clamp(enemySpeed + 0.25, 0, 15)
         
         SpawnEnemy()
     end
@@ -140,7 +143,7 @@ function love.update(dt)
             enemy.Direction = 1
             enemy.Position.Y = enemy.Position.Y + 20
         end
-
+        
         enemy.Position.X = enemy.Position.X + enemy.Direction * enemySpeed
 
         enemies[i] = {
@@ -148,14 +151,41 @@ function love.update(dt)
             y = enemy.Position.Y
         }
 
-        if enemy.Position.Y > 550 then
+        if enemy.Position.Y > 500 then
             table.remove(enemies, i)
             table.remove(enemiesInstances, i)
 
-            health = health - 10
-
+            health = utils:Clamp(health - 10, 0, 100)
+            
             server:sendToAll("updateHealth", health)
+            
+            if health <= 0 then
+                if not restarting then
+                    restartTimer = love.timer.getTime() + 4
+                    restarting = true
+                end
+                
+            end
         end
+    end
+
+    if health == 0 and love.timer.getTime() > restartTimer and restarting then
+        enemies = {}
+        enemiesInstances = {}
+        bullets = {}
+        bulletsInstances = {}
+
+        for k, v in pairs(scores) do
+            scores[k] = 0
+        end
+        
+        health = 100
+        restarting = false
+
+        enemySpawnTime = 4
+        enemySpeed = 6
+
+        server:sendToAll("updateHealth", health)
     end
 
     server:sendToAll("updateEnemies", enemies)

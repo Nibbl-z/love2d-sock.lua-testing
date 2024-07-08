@@ -136,9 +136,16 @@ function love.draw()
     love.graphics.setFont(font)
     love.graphics.setColor(0,1,0,1)
     love.graphics.printf(tostring(totalScore), 0, 10, love.graphics.getWidth(), "center")
-    
-    
+
     love.graphics.rectangle("fill", 0, love.graphics.getHeight() - 25, (health / 100) * love.graphics.getWidth(), 25)
 
+    if health <= 0 then
+        love.graphics.setColor(1,0,0,0.5)
+        love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+        
+        love.graphics.setColor(1,1,1,1)
+        love.graphics.printf("GAME OVER", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+    end
+    
     --love.graphics.print("Health: "..tostring(health), 0, 40)
 end
