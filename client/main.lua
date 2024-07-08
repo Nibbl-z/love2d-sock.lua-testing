@@ -6,7 +6,17 @@ local enemies = nil
 local scores = {}
 local index = 0
 
+local sprites = {
+    Player = "player.png",
+    Enemy = "enemy.png",
+    Bullet = "bullet.png"
+}
+
 function love.load()
+    for k, v in pairs(sprites) do
+        sprites[k] = love.graphics.newImage("/img/"..v)
+    end
+
     client = sock.newClient("localhost", 22122)
 
     client:on("connect", function(data)
@@ -80,27 +90,27 @@ function love.update(dt)
     if index == 0 then
         client:send("getIndex")
     end
-
+    
     client:update()
 end
 
 function love.draw()
     if world ~= nil then
         for k, player in pairs(world) do
-            love.graphics.rectangle("fill", player.x, player.y, 50, 50)
+            love.graphics.draw(sprites.Player, player.x, player.y)
         end
     end
     
     
     if bullets ~= nil then
         for _, v in ipairs(bullets) do
-            love.graphics.rectangle("fill", v.x, v.y, 5, 20)
+            love.graphics.draw(sprites.Bullet, v.x, v.y)
         end
     end
 
     if enemies ~= nil then
         for _, v in ipairs(enemies) do
-            love.graphics.rectangle("line", v.x, v.y, 40, 40)
+            love.graphics.draw(sprites.Enemy, v.x, v.y)
         end
     end
     local totalScore = 0

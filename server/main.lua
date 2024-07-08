@@ -11,7 +11,7 @@ local enemiesInstances = {}
 
 local enemySpawnTimer = love.timer.getTime()
 local enemySpawnTime = 4
-local enemySpeed = 6
+local enemySpeed = 5
 
 local scores = {}
 
@@ -23,7 +23,7 @@ function love.load()
         
         playersInstances[tostring(client:getIndex())] = instance:New(nil, "Player"..tostring(client:getIndex()))
         playersInstances[tostring(client:getIndex())].Position.Y = 500
-
+        
         scores[tostring(client:getIndex())] = 0
     end)
     
@@ -100,8 +100,8 @@ function love.update(dt)
 
         for ei, enemy in ipairs(enemiesInstances) do
             if utils:CheckCollision(
-                bullet.Position.X, bullet.Position.Y, 5, 20,
-                enemy.Position.X, enemy.Position.Y, 40, 40
+                bullet.Position.X, bullet.Position.Y, 10, 30,
+                enemy.Position.X, enemy.Position.Y, 80, 80
             ) then
                 scores[tostring(bullet.Owner)] = scores[tostring(bullet.Owner)] + 1000
 
@@ -126,7 +126,7 @@ function love.update(dt)
         enemySpawnTimer = love.timer.getTime() + enemySpawnTime
         
         enemySpawnTime = utils:Clamp(enemySpawnTime - 0.2, 1, 100)
-        enemySpeed = utils:Clamp(enemySpeed + 1, 0, 15)
+        enemySpeed = utils:Clamp(enemySpeed + 0.1, 0, 15)
         
         SpawnEnemy()
     end
