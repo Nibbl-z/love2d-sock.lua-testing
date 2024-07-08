@@ -66,6 +66,8 @@ function love.load()
             x = bullet.Position.X + 22.5,
             y = bullet.Position.Y
         })
+
+        server:sendToAllBut(client, "sfx", "Shoot")
     end)
     
     print("server is up and running")
@@ -113,6 +115,8 @@ function love.update(dt)
                 table.remove(enemies, ei)
                 table.remove(bulletsInstances, i)
                 table.remove(bullets, i)
+
+                server:sendToAll("sfx", "Explosion")
             end
         end
     end
@@ -158,9 +162,12 @@ function love.update(dt)
             health = utils:Clamp(health - 10, 0, 100)
             
             server:sendToAll("updateHealth", health)
+
+            server:sendToAll("sfx", "Damage")
             
             if health <= 0 then
                 if not restarting then
+                    server:sendToAll("sfx", "Death")
                     restartTimer = love.timer.getTime() + 4
                     restarting = true
                 end

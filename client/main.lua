@@ -13,11 +13,22 @@ local sprites = {
     Bullet = "bullet.png"
 }
 
+local sounds = {
+    Damage = {"damage.wav", "static"},
+    Death = {"death.wav", "static"},
+    Shoot = {"shoot.wav", "static"},
+    Explosion = {"explosion.wav", "static"}
+}
+
 function love.load()
     font = love.graphics.newFont("/fonts/PressStart2P-Regular.ttf", 32)
     
     for k, v in pairs(sprites) do
         sprites[k] = love.graphics.newImage("/img/"..v)
+    end
+    
+    for k, v in pairs(sounds) do
+        sounds[k] = love.audio.newSource("/sound/"..v[1], v[2])
     end
 
     client = sock.newClient("localhost", 22122)
@@ -64,6 +75,10 @@ function love.load()
         health = data
     end)
 
+    client:on("sfx", function (data)
+        sounds[data]:clone():play()
+    end)
+
     client:connect()
 
 end
@@ -75,6 +90,7 @@ local movementDirections = {
 function love.keypressed(key)
     if key == "space" then
         client:send("shoot")
+        sounds.Shoot:clone():play()
     end
 end
 
