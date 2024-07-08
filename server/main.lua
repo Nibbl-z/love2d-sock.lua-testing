@@ -10,6 +10,10 @@ local enemies = {}
 local enemiesInstances = {}
 
 local enemySpawnTimer = love.timer.getTime()
+local enemySpawnTime = 4
+local enemySpeed = 6
+
+local scores = {}
 
 function love.load()
     server = sock.newServer("*", 22122)
@@ -19,8 +23,10 @@ function love.load()
         
         playersInstances[tostring(client:getIndex())] = instance:New(nil, "Player"..tostring(client:getIndex()))
         playersInstances[tostring(client:getIndex())].Position.Y = 500
-    end)
 
+        scores[tostring(client:getIndex())] = 0
+    end)
+    
     server:on("getIndex", function (data, client)
         client:send("getIndex", client:getIndex())
     end)
@@ -30,6 +36,7 @@ function love.load()
         
         playersInstances[tostring(client:getIndex())] = nil
         players[tostring(client:getIndex())] = nil
+        scores[tostring(client:getIndex())] = nil
     end)
     
     server:on("move", function (data, client)
@@ -48,6 +55,7 @@ function love.load()
 
         bullet.Position.X = plr.Position.X + 22.5
         bullet.Position.Y = plr.Position.Y
+        bullet.Owner = client:getIndex()
 
         table.insert(bulletsInstances, bullet)
         table.insert(bullets, {
@@ -95,6 +103,8 @@ function love.update(dt)
                 bullet.Position.X, bullet.Position.Y, 5, 20,
                 enemy.Position.X, enemy.Position.Y, 40, 40
             ) then
+                scores[tostring(bullet.Owner)] = scores[tostring(bullet.Owner)] + 1000
+
                 table.remove(enemiesInstances, ei)
                 table.remove(enemies, ei)
                 table.remove(bulletsInstances, i)
@@ -113,7 +123,10 @@ function love.update(dt)
     end
 
     if love.timer.getTime() > enemySpawnTimer then
-        enemySpawnTimer = love.timer.getTime() + 2
+        enemySpawnTimer = love.timer.getTime() + enemySpawnTime
+        
+        enemySpawnTime = utils:Clamp(enemySpawnTime - 0.2, 1, 100)
+        enemySpeed = utils:Clamp(enemySpeed + 1, 0, 15)
         
         SpawnEnemy()
     end
@@ -127,7 +140,7 @@ function love.update(dt)
             enemy.Position.Y = enemy.Position.Y + 20
         end
 
-        enemy.Position.X = enemy.Position.X + enemy.Direction * 10
+        enemy.Position.X = enemy.Position.X + enemy.Direction * enemySpeed
 
         enemies[i] = {
             x = enemy.Position.X,
@@ -136,6 +149,7 @@ function love.update(dt)
     end
 
     server:sendToAll("updateEnemies", enemies)
+    server:sendToAll("updateScores", scores)
     
     server:update()
 end

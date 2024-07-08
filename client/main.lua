@@ -3,6 +3,7 @@ sock = require("sock")
 local world = nil
 local bullets = nil
 local enemies = nil
+local scores = {}
 local index = 0
 
 function love.load()
@@ -11,7 +12,7 @@ function love.load()
     client:on("connect", function(data)
         print("Client connected to the server.")
     end)
-
+    
     client:on("disconnect", function(data)
         print("Client disconnected from the server.")
     end)
@@ -24,7 +25,6 @@ function love.load()
 
     client:on("updatePlayers", function(msg)
         if tonumber(msg[1]) ~= index and world ~= nil then
-            print("moving "..msg[1].. "!!")
             world[msg[1]] = msg[2]
         end
     end)
@@ -38,7 +38,12 @@ function love.load()
     end)
 
     client:on("getIndex", function (data)
+        print("Data", data)
         index = data
+    end)
+
+    client:on("updateScores", function (data)
+        scores = data
     end)
 
     client:connect()
@@ -64,7 +69,6 @@ function love.update(dt)
 
         for k, v in pairs(movementDirections) do
             if love.keyboard.isDown(k) then
-                
                 if plr ~= nil then
                     plr.x = plr.x + v * 10
                     client:send("move", plr.x)
@@ -99,5 +103,17 @@ function love.draw()
             love.graphics.rectangle("line", v.x, v.y, 40, 40)
         end
     end
-
+    local totalScore = 0
+    local myScore = 0
+    
+    for k, v in pairs(scores) do
+        if tostring(k) == tostring(index) then
+            myScore = v
+        end
+        
+        totalScore = totalScore + v
+    end
+    
+    love.graphics.print("My Score: "..tostring(myScore), 0, 0)
+    love.graphics.print("Total Score: "..tostring(totalScore), 0, 20)
 end
