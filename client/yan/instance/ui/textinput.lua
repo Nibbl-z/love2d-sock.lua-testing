@@ -14,7 +14,7 @@ function textinput:New(o, screen, placeholderText, textSize)
     o.TextSize = textSize
     o.Type = "TextInput"
     
-    o.Font = love.graphics.newFont(o.TextSize)
+    o.Font = love.graphics.newFont("/fonts/PressStart2P-Regular.ttf", o.TextSize)
     
     o.TextColor = {
         R = 1, G = 1, B = 1, A = 1

@@ -10,7 +10,7 @@ local enemies = {}
 local enemiesInstances = {}
 
 local enemySpawnTimer = love.timer.getTime()
-local enemySpawnTime = 4
+local enemySpawnTime = 2.5
 local enemySpeed = 6
 
 local health = 100
@@ -47,27 +47,33 @@ function love.load()
         local plr = playersInstances[tostring(client:getIndex())]
         
         plr.Position.X = data
+        plr.ShootDebounce = 0
     end)
     
     server:on("getGame", function (data, client)
         client:send("getGame", {players, bullets, enemies, health})
     end)
-
+    
     server:on("shoot", function (data, client)
-        local bullet = instance:New(nil, "Bullet"..tostring(#bullets))
+        
         local plr = playersInstances[tostring(client:getIndex())]
+        if love.timer.getTime() > plr.ShootDebounce then
+            plr.ShootDebounce = love.timer.getTime() + 0.2
 
-        bullet.Position.X = plr.Position.X + 22.5
-        bullet.Position.Y = plr.Position.Y
-        bullet.Owner = client:getIndex()
-
-        table.insert(bulletsInstances, bullet)
-        table.insert(bullets, {
-            x = bullet.Position.X + 22.5,
-            y = bullet.Position.Y
-        })
-
-        server:sendToAllBut(client, "sfx", "Shoot")
+            local bullet = instance:New(nil, "Bullet"..tostring(#bullets))
+        
+            bullet.Position.X = plr.Position.X + 22.5
+            bullet.Position.Y = plr.Position.Y
+            bullet.Owner = client:getIndex()
+            
+            table.insert(bulletsInstances, bullet)
+            table.insert(bullets, {
+                x = bullet.Position.X + 22.5,
+                y = bullet.Position.Y
+            })
+            
+            server:sendToAll("sfx", "Shoot")
+        end
     end)
     
     print("server is up and running")
@@ -111,6 +117,8 @@ function love.update(dt)
             ) then
                 scores[tostring(bullet.Owner)] = scores[tostring(bullet.Owner)] + 1000
                 
+                server:sendToAll("enemyDeath", {x = enemy.Position.X + 40, y = enemy.Position.Y + 40})
+
                 table.remove(enemiesInstances, ei)
                 table.remove(enemies, ei)
                 table.remove(bulletsInstances, i)
@@ -133,7 +141,7 @@ function love.update(dt)
     if love.timer.getTime() > enemySpawnTimer then
         enemySpawnTimer = love.timer.getTime() + enemySpawnTime
         
-        enemySpawnTime = utils:Clamp(enemySpawnTime - 0.2, 1, 100)
+        enemySpawnTime = utils:Clamp(enemySpawnTime - 0.2, 0.7, 100)
         enemySpeed = utils:Clamp(enemySpeed + 0.25, 0, 15)
         
         SpawnEnemy()

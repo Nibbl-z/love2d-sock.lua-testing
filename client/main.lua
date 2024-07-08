@@ -16,7 +16,8 @@ local client = nil
 local sprites = {
     Player = "player.png",
     Enemy = "enemy.png",
-    Bullet = "bullet.png"
+    Bullet = "bullet.png",
+    Square = "square.png"
 }
 
 local sounds = {
@@ -30,6 +31,22 @@ local sounds = {
 local connecting = false
 local connectWaiting = false
 local connectStartTimer = 0
+
+local emitters = {}
+
+function explosion(x, y)
+    local particles = love.graphics.newParticleSystem(sprites.Square, 2000)
+
+    particles:setLinearAcceleration(-3000,-3000,3000,3000)
+    particles:setLinearDamping(40)
+    particles:setSpread(10 * math.pi)
+    particles:setParticleLifetime(0.4)
+    particles:setPosition(x, y)
+    particles:setSizes(1, 0)
+    particles:emit(20)
+    
+    table.insert(emitters, particles)
+end
 
 function connect()
     connectWaiting = false
@@ -96,10 +113,12 @@ function connect()
             sounds[data]:clone():play()
         end)
 
-        
+        client:on("enemyDeath", function (data)
+            explosion(data.x, data.y)
+        end)
     end
 end
-    
+
 
 function love.load()
     font = love.graphics.newFont("/fonts/PressStart2P-Regular.ttf", 32)
@@ -128,10 +147,16 @@ function love.load()
     ipInput:SetPlaceholderTextColor(0,0,0,1)
 
     statusText = label:New(nil, menu, "", 32, "center")
-    statusText:SetPosition(0.5,0,0.7,0)
-    statusText:SetSize(0.5,0,0.2,0)
+    statusText:SetPosition(0.5,0,0.7,10)
+    statusText:SetSize(0.7,0,0.2,0)
     statusText:SetColor(0,1,0,1)
     statusText:SetAnchorPoint(0.5,0.5)
+
+    logoText = label:New(nil, menu, "Space Defenders", 64, "center")
+    logoText:SetPosition(0,0,0,10)
+    logoText:SetSize(1,0,0.3,0)
+    logoText:SetColor(0,1,0,1)
+    logoText:SetAnchorPoint(0,0)
 
     menu.Enabled = true
     
@@ -163,7 +188,7 @@ function love.keypressed(key, scancode, rep)
     
     if key == "space" and client ~= nil then
         client:send("shoot")
-        sounds.Shoot:clone():play()
+        --sounds.Shoot:clone():play()
     end
 end
 
@@ -201,6 +226,9 @@ function love.update(dt)
         menu:Update()
     end
     
+    for _, v in ipairs(emitters) do
+        v:update(dt)
+    end
 end
 
 function love.draw()
@@ -209,11 +237,16 @@ function love.draw()
     love.graphics.setColor(1,1,1,1)
     if world ~= nil then
         for k, player in pairs(world) do
+            if tostring(k) == tostring(index) then
+                love.graphics.setColor(1,1,1,1)
+            else
+                love.graphics.setColor(1,1,1,0.5)
+            end
             love.graphics.draw(sprites.Player, player.x, player.y)
         end
     end
     
-    
+    love.graphics.setColor(1,1,1,1)
     if bullets ~= nil then
         for _, v in ipairs(bullets) do
             love.graphics.draw(sprites.Bullet, v.x, v.y)
@@ -236,6 +269,10 @@ function love.draw()
         totalScore = totalScore + v
     end
     
+    for _, v in ipairs(emitters) do
+        love.graphics.draw(v, 0, 0)
+    end
+
     if world ~= nil then
         love.graphics.setFont(font)
         love.graphics.setColor(0,1,0,1)

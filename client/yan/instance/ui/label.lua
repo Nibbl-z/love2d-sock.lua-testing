@@ -11,7 +11,7 @@ function label:New(o, screen, text, textSize, align)
     o.TextSize = textSize
     o.Align = align
 
-    o.Font = love.graphics.newFont(o.TextSize)
+    o.Font = love.graphics.newFont("/fonts/PressStart2P-Regular.ttf", o.TextSize)
     
     function o:Draw()
         local pX, pY, sX, sY = o:GetDrawingCoordinates()
