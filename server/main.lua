@@ -55,7 +55,7 @@ function love.load()
     end)
     
     server:on("shoot", function (data, client)
-        
+        if health == 0 then return end
         local plr = playersInstances[tostring(client:getIndex())]
         if love.timer.getTime() > plr.ShootDebounce then
             plr.ShootDebounce = love.timer.getTime() + 0.2
@@ -78,6 +78,8 @@ function love.load()
     
     print("server is up and running")
 end
+
+
 
 function SpawnEnemy()
     local enemy = instance:New(nil, "Enemy"..tostring(#enemies))
@@ -118,12 +120,12 @@ function love.update(dt)
                 scores[tostring(bullet.Owner)] = scores[tostring(bullet.Owner)] + 1000
                 
                 server:sendToAll("enemyDeath", {x = enemy.Position.X + 40, y = enemy.Position.Y + 40})
-
+                
                 table.remove(enemiesInstances, ei)
                 table.remove(enemies, ei)
                 table.remove(bulletsInstances, i)
                 table.remove(bullets, i)
-
+                
                 server:sendToAll("sfx", "Explosion")
             end
         end

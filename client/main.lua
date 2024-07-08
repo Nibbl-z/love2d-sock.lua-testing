@@ -119,7 +119,6 @@ function connect()
     end
 end
 
-
 function love.load()
     font = love.graphics.newFont("/fonts/PressStart2P-Regular.ttf", 32)
     
@@ -281,11 +280,18 @@ function love.draw()
         love.graphics.rectangle("fill", 0, love.graphics.getHeight() - 25, (health / 100) * love.graphics.getWidth(), 25)
 
         if health <= 0 then
+            sounds.Music:setVolume(0.4)
+            
             love.graphics.setColor(1,0,0,0.5)
             love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
             
             love.graphics.setColor(1,1,1,1)
             love.graphics.printf("GAME OVER", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+
+            love.graphics.setColor(1,1,1,1)
+            love.graphics.printf("FINAL SCORE: "..tostring(totalScore), 0, love.graphics.getHeight() / 2 + 32, love.graphics.getWidth(), "center")
+        else
+            sounds.Music:setVolume(1)
         end
     end
 
