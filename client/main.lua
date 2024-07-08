@@ -17,7 +17,8 @@ local sounds = {
     Damage = {"damage.wav", "static"},
     Death = {"death.wav", "static"},
     Shoot = {"shoot.wav", "static"},
-    Explosion = {"explosion.wav", "static"}
+    Explosion = {"explosion.wav", "static"},
+    Music = {"music.mp3", "stream"}
 }
 
 function love.load()
@@ -30,6 +31,9 @@ function love.load()
     for k, v in pairs(sounds) do
         sounds[k] = love.audio.newSource("/sound/"..v[1], v[2])
     end
+
+    sounds.Music:setLooping(true)
+    sounds.Music:play()
 
     client = sock.newClient("localhost", 22122)
 
