@@ -5,6 +5,7 @@ local bullets = nil
 local enemies = nil
 local scores = {}
 local index = 0
+local health = 100
 
 local sprites = {
     Player = "player.png",
@@ -13,6 +14,8 @@ local sprites = {
 }
 
 function love.load()
+    font = love.graphics.newFont("/fonts/PressStart2P-Regular.ttf", 32)
+    
     for k, v in pairs(sprites) do
         sprites[k] = love.graphics.newImage("/img/"..v)
     end
@@ -31,6 +34,7 @@ function love.load()
         world = data[1]
         bullets = data[2]
         enemies = data[3]
+        health = data[4]
     end)
 
     client:on("updatePlayers", function(msg)
@@ -54,6 +58,10 @@ function love.load()
 
     client:on("updateScores", function (data)
         scores = data
+    end)
+
+    client:on("updateHealth", function (data)
+        health = data
     end)
 
     client:connect()
@@ -95,6 +103,7 @@ function love.update(dt)
 end
 
 function love.draw()
+    love.graphics.setColor(1,1,1,1)
     if world ~= nil then
         for k, player in pairs(world) do
             love.graphics.draw(sprites.Player, player.x, player.y)
@@ -124,6 +133,12 @@ function love.draw()
         totalScore = totalScore + v
     end
     
-    love.graphics.print("My Score: "..tostring(myScore), 0, 0)
-    love.graphics.print("Total Score: "..tostring(totalScore), 0, 20)
+    love.graphics.setFont(font)
+    love.graphics.setColor(0,1,0,1)
+    love.graphics.printf(tostring(totalScore), 0, 10, love.graphics.getWidth(), "center")
+    
+    
+    love.graphics.rectangle("fill", 0, love.graphics.getHeight() - 25, (health / 100) * love.graphics.getWidth(), 25)
+
+    --love.graphics.print("Health: "..tostring(health), 0, 40)
 end

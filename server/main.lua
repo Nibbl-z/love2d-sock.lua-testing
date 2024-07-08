@@ -13,6 +13,7 @@ local enemySpawnTimer = love.timer.getTime()
 local enemySpawnTime = 4
 local enemySpeed = 5
 
+local health = 100
 local scores = {}
 
 function love.load()
@@ -46,7 +47,7 @@ function love.load()
     end)
     
     server:on("getGame", function (data, client)
-        client:send("getGame", {players, bullets, enemies})
+        client:send("getGame", {players, bullets, enemies, health})
     end)
 
     server:on("shoot", function (data, client)
@@ -104,7 +105,7 @@ function love.update(dt)
                 enemy.Position.X, enemy.Position.Y, 80, 80
             ) then
                 scores[tostring(bullet.Owner)] = scores[tostring(bullet.Owner)] + 1000
-
+                
                 table.remove(enemiesInstances, ei)
                 table.remove(enemies, ei)
                 table.remove(bulletsInstances, i)
@@ -132,7 +133,7 @@ function love.update(dt)
     end
     
     for i, enemy in ipairs(enemiesInstances) do
-        if enemy.Position.X > 800 then
+        if enemy.Position.X > 720 then
             enemy.Direction = -1
             enemy.Position.Y = enemy.Position.Y + 20
         elseif enemy.Position.X < 0 then
@@ -146,6 +147,15 @@ function love.update(dt)
             x = enemy.Position.X,
             y = enemy.Position.Y
         }
+
+        if enemy.Position.Y > 550 then
+            table.remove(enemies, i)
+            table.remove(enemiesInstances, i)
+
+            health = health - 10
+
+            server:sendToAll("updateHealth", health)
+        end
     end
 
     server:sendToAll("updateEnemies", enemies)
