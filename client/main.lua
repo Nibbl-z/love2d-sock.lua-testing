@@ -185,7 +185,7 @@ function love.update(dt)
             for k, v in pairs(movementDirections) do
                 if love.keyboard.isDown(k) then
                     if plr ~= nil then
-                        plr.x = plr.x + v * 10
+                        plr.x = plr.x + v * 500 * dt
                         client:send("move", plr.x)
                     end
                 end

@@ -97,7 +97,7 @@ function love.update(dt)
     end
     
     for i, bullet in ipairs(bulletsInstances) do
-        bullet.Position.Y = bullet.Position.Y - 20
+        bullet.Position.Y = bullet.Position.Y - (2000) * dt
         
         bullets[i] = {
             x = bullet.Position.X,
@@ -148,7 +148,7 @@ function love.update(dt)
             enemy.Position.Y = enemy.Position.Y + 20
         end
         
-        enemy.Position.X = enemy.Position.X + enemy.Direction * enemySpeed
+        enemy.Position.X = enemy.Position.X + enemy.Direction * enemySpeed * dt * 50
 
         enemies[i] = {
             x = enemy.Position.X,
