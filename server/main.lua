@@ -1,5 +1,6 @@
 sock = require("sock")
 instance = require("yan.instance.instance")
+utils = require("yan.utils")
 
 local playersInstances = {}
 local players = {}
@@ -8,7 +9,7 @@ local bulletsInstances = {}
 local enemies = {}
 local enemiesInstances = {}
 
-local enemySpawnTimer = love.timer.getTime() + 5
+local enemySpawnTimer = love.timer.getTime()
 
 function love.load()
     server = sock.newServer("*", 22122)
@@ -80,14 +81,26 @@ function love.update(dt)
         
         server:sendToAll("updatePlayers", {k, players[k]})
     end
-
+    
     for i, bullet in ipairs(bulletsInstances) do
-        bullet.Position.Y = bullet.Position.Y - 10
+        bullet.Position.Y = bullet.Position.Y - 20
         
         bullets[i] = {
             x = bullet.Position.X,
             y = bullet.Position.Y
         }
+
+        for ei, enemy in ipairs(enemiesInstances) do
+            if utils:CheckCollision(
+                bullet.Position.X, bullet.Position.Y, 5, 20,
+                enemy.Position.X, enemy.Position.Y, 40, 40
+            ) then
+                table.remove(enemiesInstances, ei)
+                table.remove(enemies, ei)
+                table.remove(bulletsInstances, i)
+                table.remove(bullets, i)
+            end
+        end
     end
     
     server:sendToAll("updateBullets", bullets)
@@ -100,7 +113,7 @@ function love.update(dt)
     end
 
     if love.timer.getTime() > enemySpawnTimer then
-        enemySpawnTimer = love.timer.getTime() + 5
+        enemySpawnTimer = love.timer.getTime() + 2
         
         SpawnEnemy()
     end
